@@ -1,0 +1,59 @@
+# Created once in the "account" stack; read here.
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [data.aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.github_repo}:ref:refs/heads/${var.branch}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "this" {
+  name                 = var.name
+  assume_role_policy   = data.aws_iam_policy_document.assume.json
+  max_session_duration = 3600
+}
+
+data "aws_iam_policy_document" "ecr_push" {
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage",
+    ]
+    resources = [var.ecr_repository_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "ecr_push" {
+  name   = "ecr-push"
+  role   = aws_iam_role.this.id
+  policy = data.aws_iam_policy_document.ecr_push.json
+}
