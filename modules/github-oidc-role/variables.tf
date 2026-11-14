@@ -15,5 +15,13 @@ variable "branch" {
 }
 
 variable "ecr_repository_arn" {
-  type = string
+  description = "One ECR repository the role may push to. For several, use ecr_repository_arns"
+  type        = string
+  default     = null
+}
+
+variable "ecr_repository_arns" {
+  description = "ECR repositories the role may push to, for a project that builds several images"
+  type        = list(string)
+  default     = []
 }

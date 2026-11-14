@@ -35,6 +35,17 @@ module "eks" {
     vpc-cni = {
       before_compute = true
     }
+    # Gives pods IAM roles through EKS Pod Identity, without an OIDC provider per cluster.
+    eks-pod-identity-agent = {
+      before_compute = true
+    }
+    # Creates EBS volumes for PersistentVolumeClaims. Its controller gets the role below through Pod Identity.
+    aws-ebs-csi-driver = {
+      pod_identity_association = [{
+        role_arn        = aws_iam_role.ebs_csi.arn
+        service_account = "ebs-csi-controller-sa"
+      }]
+    }
   }
 
   eks_managed_node_groups = {
@@ -49,4 +60,27 @@ module "eks" {
       desired_size = var.desired_size
     }
   }
+}
+
+# The EBS CSI controller's role. It trusts the EKS Pod Identity service; the add-on above binds it to the
+# controller's service account, so only that pod receives these permissions.
+data "aws_iam_policy_document" "ebs_csi_assume" {
+  statement {
+    actions = ["sts:AssumeRole", "sts:TagSession"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ebs_csi" {
+  name               = "${var.name}-ebs-csi"
+  assume_role_policy = data.aws_iam_policy_document.ebs_csi_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi" {
+  role       = aws_iam_role.ebs_csi.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }

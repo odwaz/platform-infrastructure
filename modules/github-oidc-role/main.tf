@@ -47,13 +47,26 @@ data "aws_iam_policy_document" "ecr_push" {
       "ecr:UploadLayerPart",
       "ecr:CompleteLayerUpload",
       "ecr:PutImage",
+      # With immutable tags a second push of a tag fails, so a re-run checks whether the image is there first.
+      "ecr:DescribeImages",
     ]
-    resources = [var.ecr_repository_arn]
+    resources = local.ecr_repository_arns
   }
+}
+
+locals {
+  ecr_repository_arns = concat(var.ecr_repository_arn == null ? [] : [var.ecr_repository_arn], var.ecr_repository_arns)
 }
 
 resource "aws_iam_role_policy" "ecr_push" {
   name   = "ecr-push"
   role   = aws_iam_role.this.id
   policy = data.aws_iam_policy_document.ecr_push.json
+
+  lifecycle {
+    precondition {
+      condition     = length(local.ecr_repository_arns) > 0
+      error_message = "Give the repositories this role may push to: ecr_repository_arn or ecr_repository_arns."
+    }
+  }
 }
