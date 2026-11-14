@@ -1,6 +1,7 @@
-# The default StorageClass, on the EBS CSI driver. EKS creates only a legacy gp2 class, and not as the default, so a
-# PersistentVolumeClaim without a class (Convoy's Kafka) would stay Pending. Apply once after the cluster is created:
-#   kubectl apply -f projects/convoy/dev/cluster/storageclass-gp3.yaml
+# The default StorageClass, on the EBS CSI driver that app-stack installs. EKS creates only a legacy gp2 class, and
+# not as the default, so a PersistentVolumeClaim that names no class would stay Pending. Apply once to every cluster
+# app-stack creates, after it exists:
+#   kubectl apply -f modules/app-stack/cluster/storageclass-gp3.yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
