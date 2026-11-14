@@ -1,0 +1,16 @@
+# The default StorageClass, on the EBS CSI driver. EKS creates only a legacy gp2 class, and not as the default, so a
+# PersistentVolumeClaim without a class (Convoy's Kafka) would stay Pending. Apply once after the cluster is created:
+#   kubectl apply -f projects/convoy/dev/cluster/storageclass-gp3.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp3
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: ebs.csi.aws.com
+parameters:
+  type: gp3
+# A volume lives in one availability zone; wait until the pod is scheduled so the volume is made in the pod's zone.
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Delete

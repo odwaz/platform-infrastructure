@@ -35,7 +35,7 @@ resource "aws_iam_openid_connect_provider" "github" {
 # One Terraform Cloud role per project workspace.
 # To add a project later, add its workspace name to this list.
 locals {
-  workspaces = ["wallet-dev"]
+  workspaces = ["wallet-dev", "convoy-dev"]
 }
 
 resource "aws_iam_role" "tfc" {
