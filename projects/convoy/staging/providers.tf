@@ -4,8 +4,8 @@ provider "aws" {
   default_tags {
     tags = {
       Project     = "convoy"
-      Environment = "dev"
-      ManagedBy   = "platform-infrastructure/projects/convoy/dev"
+      Environment = "staging"
+      ManagedBy   = "platform-infrastructure/projects/convoy/staging"
     }
   }
 }
