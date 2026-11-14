@@ -5,7 +5,7 @@ terraform {
     organization = "devwork"
 
     workspaces {
-      name = "convoy-dev"
+      name = "convoy-staging"
     }
   }
 
