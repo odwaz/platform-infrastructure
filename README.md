@@ -137,8 +137,10 @@ module "app" {
 
 1. Copy an existing project's `versions.tf`, `providers.tf`, `variables.tf` and `outputs.tf`, and set the workspace
    name in `versions.tf` and the tags in `providers.tf`.
-2. Add the workspace name to `local.workspaces` in `account/main.tf` and apply `account`, which creates its
-   Terraform Cloud role.
+2. Add the workspace to `local.workspaces` in `account/main.tf`, with its region, its `ManagedBy` tag and
+   `least_privilege = true`, and apply `account`. That creates its Terraform Cloud role, `tfc-<workspace>`, which
+   may change only resources named after the workspace (`account/stack.tf`). The workspace name must be the
+   stack's `name`.
 3. Create the workspace in Terraform Cloud with working directory `projects/<app>/<env>`, the variables
    `TFC_AWS_PROVIDER_AUTH=true` and `TFC_AWS_RUN_ROLE_ARN`, and the stack's Terraform variables.
 4. Plan and apply, then `kubectl apply -f modules/app-stack/cluster/storageclass-gp3.yaml` on the new cluster.

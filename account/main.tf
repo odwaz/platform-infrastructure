@@ -32,14 +32,32 @@ resource "aws_iam_openid_connect_provider" "github" {
   client_id_list = ["sts.amazonaws.com"]
 }
 
-# One Terraform Cloud role per project workspace.
-# To add a project later, add its workspace name to this list.
+data "aws_caller_identity" "current" {}
+
+# One Terraform Cloud role per project workspace. To add a project, add its workspace here.
+#
+#   region          - the region its stack is built in
+#   managed_by      - its provider's ManagedBy default tag, which marks the KMS keys it may manage
+#   least_privilege - true for stacks built with modules/app-stack: the role may change only resources named after
+#                     its workspace (see stack.tf). false keeps AdministratorAccess, for stacks built on the older
+#                     pinned modules, whose names don't follow that rule.
 locals {
-  workspaces = ["wallet-dev", "convoy-staging"]
+  workspaces = {
+    "wallet-dev" = {
+      region          = "us-east-1"
+      managed_by      = "platform-infrastructure/projects/wallet/dev"
+      least_privilege = false
+    }
+    "convoy-staging" = {
+      region          = "af-south-1"
+      managed_by      = "platform-infrastructure/projects/convoy/staging"
+      least_privilege = true
+    }
+  }
 }
 
 resource "aws_iam_role" "tfc" {
-  for_each = toset(local.workspaces)
+  for_each = local.workspaces
   name     = "tfc-${each.key}"
 
   assume_role_policy = jsonencode({
@@ -57,9 +75,16 @@ resource "aws_iam_role" "tfc" {
 }
 
 resource "aws_iam_role_policy_attachment" "tfc_admin" {
-  for_each   = aws_iam_role.tfc
+  for_each   = { for k, w in local.workspaces : k => aws_iam_role.tfc[k] if !w.least_privilege }
   role       = each.value.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_iam_role_policy" "tfc_stack" {
+  for_each = { for k, w in local.workspaces : k => w if w.least_privilege }
+  name     = "stack"
+  role     = aws_iam_role.tfc[each.key].name
+  policy   = data.aws_iam_policy_document.stack[each.key].json
 }
 
 output "tfc_role_arns" {

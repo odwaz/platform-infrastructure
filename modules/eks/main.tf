@@ -11,6 +11,10 @@ module "eks" {
   endpoint_public_access       = true
   endpoint_public_access_cidrs = var.endpoint_public_access_cidrs
 
+  # Pods get IAM roles through EKS Pod Identity, so the cluster needs no IRSA OIDC provider. Without it, the
+  # Terraform Cloud role needs no permission over OIDC providers.
+  enable_irsa = false
+
   # The identity that runs the apply (the Terraform Cloud role) is admin...
   enable_cluster_creator_admin_permissions = true
 
@@ -54,6 +58,10 @@ module "eks" {
       ami_type       = "AL2023_x86_64_STANDARD"
       instance_types = var.instance_types
       capacity_type  = "ON_DEMAND"
+
+      # <name>-node-*, like every other IAM name in the stack, so the Terraform Cloud role can be limited to the
+      # stack's own names. The module's default, main-eks-node-group-*, is the same in every stack.
+      iam_role_name = "${var.name}-node"
 
       min_size     = var.min_size
       max_size     = var.max_size
