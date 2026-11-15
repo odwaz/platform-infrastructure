@@ -46,7 +46,7 @@ locals {
     "wallet-dev" = {
       region          = "us-east-1"
       managed_by      = "platform-infrastructure/projects/wallet/dev"
-      least_privilege = false
+      least_privilege = true
     }
     "convoy-staging" = {
       region          = "af-south-1"
