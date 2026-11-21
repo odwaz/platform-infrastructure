@@ -58,6 +58,7 @@ data "aws_iam_policy_document" "stack" {
       "ec2:ReplaceNetworkAclEntry", "ec2:ReplaceNetworkAclAssociation",
       "ec2:CreateLaunchTemplate", "ec2:CreateLaunchTemplateVersion", "ec2:ModifyLaunchTemplate",
       "ec2:DeleteLaunchTemplate", "ec2:DeleteLaunchTemplateVersions",
+      "ec2:RunInstances",
       "ec2:CreateTags", "ec2:DeleteTags",
     ]
     resources = ["*"]
