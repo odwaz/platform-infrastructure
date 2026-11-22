@@ -41,6 +41,12 @@ variable "branch" {
   default     = "main"
 }
 
+variable "github_subject_prefix" {
+  description = "The OIDC subject prefix github_repo's builds send, when it uses GitHub's immutable subject; null for repo:<github_repo>"
+  type        = string
+  default     = null
+}
+
 variable "images" {
   description = "One ECR repository per image the app builds, named <name>/<image>. Empty for no registry"
   type        = list(string)

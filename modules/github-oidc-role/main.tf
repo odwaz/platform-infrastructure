@@ -21,7 +21,7 @@ data "aws_iam_policy_document" "assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:ref:refs/heads/${var.branch}"]
+      values   = ["${local.subject_prefix}:ref:refs/heads/${var.branch}"]
     }
   }
 }
@@ -55,6 +55,8 @@ data "aws_iam_policy_document" "ecr_push" {
 }
 
 locals {
+  # Exactly one subject: the immutable form, when given, is never accepted alongside the name-based one.
+  subject_prefix      = coalesce(var.subject_prefix, "repo:${var.github_repo}")
   ecr_repository_arns = concat(var.ecr_repository_arn == null ? [] : [var.ecr_repository_arn], var.ecr_repository_arns)
 }
 
