@@ -122,18 +122,24 @@ A project holds only that application's settings:
 ```hcl
 # projects/<app>/<env>/main.tf
 module "app" {
-  source = "git::https://github.com/odwaz/platform-infrastructure.git//modules/app-stack?ref=app-stack-v1.0.0"
+  source = "git::https://github.com/odwaz/platform-infrastructure.git//modules/app-stack?ref=app-stack-v1.1.0"
 
-  name                = "<app>-<env>"
-  cidr                = "10.60.0.0/16"   # a /16 no other project uses
-  api_allowed_cidrs   = var.api_allowed_cidrs
-  admin_principal_arn = var.admin_principal_arn
-  github_repo         = "<owner>/<app>"
-  images              = ["api", "web"]
-  database            = { db_name = "<app>", username = "<app>" }   # or leave out for none
-  db_password         = var.db_password
+  name                  = "<app>-<env>"
+  cidr                  = "10.60.0.0/16"   # a /16 no other project uses
+  api_allowed_cidrs     = var.api_allowed_cidrs
+  admin_principal_arn   = var.admin_principal_arn
+  github_repo           = "<owner>/<app>"
+  github_subject_prefix = "repo:<owner>@<owner id>/<app>@<repo id>"   # only for an immutable OIDC subject, see below
+  images                = ["api", "web"]
+  database              = { db_name = "<app>", username = "<app>" }   # or leave out for none
+  db_password           = var.db_password
 }
 ```
+
+`github_subject_prefix` is for a repository that uses GitHub's immutable OIDC subject, which names it by owner and
+repository ID as well as name. Check with `gh api repos/<owner>/<app>/actions/oidc/customization/sub`: when
+`use_immutable_subject` is `true`, set `github_subject_prefix` to its `sub_claim_prefix`; otherwise leave it out. A
+mismatch shows in the app's image workflow as `Not authorized to perform sts:AssumeRoleWithWebIdentity`.
 
 1. Copy an existing project's `versions.tf`, `providers.tf`, `variables.tf` and `outputs.tf`, and set the workspace
    name in `versions.tf` and the tags in `providers.tf`.

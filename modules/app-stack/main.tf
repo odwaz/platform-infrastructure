@@ -69,6 +69,7 @@ module "github_ci_role" {
 
   name                = "${var.name}-github-ecr-push"
   github_repo         = var.github_repo
+  subject_prefix      = var.github_subject_prefix
   branch              = var.branch
   ecr_repository_arns = [for repository in module.ecr : repository.repository_arn]
 }
